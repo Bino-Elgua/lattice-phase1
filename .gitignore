@@ -137,3 +137,17 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Move build artifacts
+build/
+
+# SUI artifacts
+.sui/
+
+# CLI validation logs
+cli_validation.log
+test_failures.log
+deploy_output.json
+
+# Temporary config files
+cli/config.tmp
