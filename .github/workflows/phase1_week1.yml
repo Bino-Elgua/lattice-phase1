@@ -1,0 +1,90 @@
+name: Phase 1 Week 1 Validation
+
+on:
+  workflow_dispatch:
+
+env:
+  MAX_ITERATIONS: 50
+  TIMEOUT_MINUTES: 30
+  FAUCET_COOLDOWN: 300
+  CLI_CONFIG_PATH: cli/config.json
+
+jobs:
+  phase1_validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ env.TIMEOUT_MINUTES }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup SUI CLI
+        env:
+          SUI_PRIVATE_KEY: ${{ secrets.SUI_DEVNET_PRIVATE_KEY }}
+        run: |
+          echo "$SUI_PRIVATE_KEY" | sui keytool import --scheme ed25519
+          sui client switch --env devnet
+          sui client active-address
+
+      - name: Request Devnet Tokens
+        run: |
+          ADDRESS=$(sui client active-address)
+          curl -s -X POST https://faucet.devnet.sui.io/gas \
+            -H "Content-Type: application/json" \
+            -d "{\"FixedAmountRequest\":{\"recipient\":\"$ADDRESS\"}}"
+          sleep $FAUCET_COOLDOWN
+          sui client gas
+
+      - name: Compile Move Modules
+        run: |
+          sui move build
+          echo "Compilation completed."
+
+      - name: Deploy Move Modules
+        run: |
+          DEPLOY_OUTPUT=$(sui move publish --gas-budget 10000 --no-wallet)
+          echo "$DEPLOY_OUTPUT" > deploy_output.json
+          PACKAGE_ID=$(jq -r '.objectChanges[] | select(.type=="published") | .packageId' deploy_output.json)
+          jq --arg pid "$PACKAGE_ID" '.packageId = $pid' $CLI_CONFIG_PATH > cli/config.tmp
+          mv cli/config.tmp $CLI_CONFIG_PATH
+          echo "Package deployed with ID: $PACKAGE_ID"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install CLI Dependencies
+        run: |
+          cd cli
+          npm install
+
+      - name: Run CLI Deterministic Validation
+        run: |
+          cd cli
+          for SEED in {1..10}; do
+            echo "Running CLI with seed $SEED"
+            node run.js --seed $SEED >> ../cli_validation.log
+            sleep 5
+          done
+          cat ../cli_validation.log
+
+      - name: Execute Move Tests
+        run: |
+          for i in $(seq 1 $MAX_ITERATIONS); do
+            if ! sui move test; then
+              echo "Test failure at iteration $i" >> test_failures.log
+              break
+            fi
+            sleep 10
+          done
+          echo "Move tests completed."
+
+      - name: Upload Logs & Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: phase1_logs
+          path: |
+            cli_validation.log
+            test_failures.log
+            deploy_output.json
