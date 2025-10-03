@@ -3,6 +3,6 @@
   "version": "0.2.0",
   "type": "module",
   "scripts": { "build": "tsc -p .", "test": "node dist/test/determinism.js" },
-  "dependencies": { "@mysten/sui": "^0.54.1", "@mysten/bcs": "^0.4.0" },
-  "devDependencies": { "typescript": "^5.5.0" }
+  "dependencies": { "@mysten/sui": "^1.39.0", "@mysten/bcs": "^1.8.0" },
+  "devDependencies": { "typescript": "^5.5.0", "@types/node": "^20.0.0" }
 }

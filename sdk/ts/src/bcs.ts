@@ -1,7 +1,9 @@
-import { BCS } from "@mysten/bcs";
+import { bcs } from "@mysten/bcs";
 export interface LatticeState { macro: number; micro: number; activation: number; }
-const bcs = new BCS(); bcs.registerStructType("lattice",{ macro:"u8", micro:"u8", activation:"u8" });
+
 export function decodeLattice(rawHex: string|Uint8Array): LatticeState {
-  const bytes = typeof rawHex==="string"?Buffer.from(rawHex.replace(/^0x/,""),"hex"):rawHex;
-  const val = bcs.de("lattice", bytes); return {macro:Number(val.macro), micro:Number(val.micro), activation:Number(val.activation)};
+  const bytes = typeof rawHex==="string"?Uint8Array.from(Buffer.from(rawHex.replace(/^0x/,""),"hex")):rawHex;
+  const struct = bcs.struct('Lattice', { macro: bcs.u8(), micro: bcs.u8(), activation: bcs.u8() });
+  const val = struct.parse(bytes);
+  return {macro:Number(val.macro), micro:Number(val.micro), activation:Number(val.activation)};
 }
