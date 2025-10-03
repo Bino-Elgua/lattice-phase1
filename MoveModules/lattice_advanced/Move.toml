@@ -3,3 +3,9 @@ name = "lattice_advanced"
 version = "0.1.0"
 authors = ["Bínò ÈL Guà <contact@example.com>"]
 edition = "2024"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/devnet" }
+
+[addresses]
+lattice_advanced = "0x0"
