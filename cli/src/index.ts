@@ -1,0 +1,4 @@
+#!/usr/bin/env ts-node
+import yargs from "yargs"; import { hideBin } from "yargs/helpers"; import { LatticeClient } from "../../sdk/ts/dist/client.js"; import fs from "fs";
+const argv=yargs(hideBin(process.argv)).option("seed",{type:"number",description:"numeric seed"}).option("input",{type:"string",description:"hex input for hash"}).argv;
+async function main(){const cfg=JSON.parse(fs.readFileSync("cli/config.example.json","utf8")); const packageId=cfg.packageId||process.env.PACKAGE_ID; if(!packageId)throw new Error("packageId missing"); const client=new LatticeClient(packageId); if(argv.seed){console.log("Running local preview with seed:",argv.seed);} else if(argv.input){const inputBytes=Buffer.from(argv.input.replace(/^0x/,""),"hex"); const res=await client.callDeterministicLattice(inputBytes); console.log("On-chain result:",res);} else{console.log("Specify --seed N or --input 0xhex");}} main().catch(console.error);

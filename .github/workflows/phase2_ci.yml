@@ -1,0 +1,23 @@
+name: Phase 2 CI
+on: [push,pull_request]
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install SDK dependencies
+        run: |
+          cd sdk/ts
+          npm install
+      - name: Build TypeScript SDK
+        run: |
+          cd sdk/ts
+          npm run build
+      - name: Run determinism harness
+        run: |
+          cd tests
+          npx ts-node determinism_harness.ts
