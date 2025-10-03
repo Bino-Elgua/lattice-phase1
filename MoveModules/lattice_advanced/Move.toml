@@ -1,0 +1,5 @@
+[package]
+name = "lattice_advanced"
+version = "0.1.0"
+authors = ["Bínò ÈL Guà <contact@example.com>"]
+edition = "2024"
